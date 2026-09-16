@@ -1,0 +1,9 @@
+# Installed in the image by npm ci; never copy the host's copy in.
+node_modules/
+.next/
+
+# Version control metadata and IDE files.
+.git/
+.gitignore
+.idea/
+.vscode/

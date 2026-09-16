@@ -1,0 +1,60 @@
+# One-command dev stack: Postgres + Mailpit + Spring API + Next.js.
+# Host ports 8080/3000 match the app defaults; Postgres is published on 5433 so
+# it doesn't collide with a local (Homebrew) Postgres already on 5432.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: template-db
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d template-db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    # Mailpit is MailHog's maintained successor with the same ports (SMTP 1025,
+    # web UI 8025); it is what compose uses to stand in for a real SMTP server.
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # web UI
+
+  api:
+    build: ./backend
+    environment:
+      # Inside the compose network the database is `db:5432`; the host's 5433
+      # mapping is only for tools running on the host.
+      DATABASE_URL: postgres://postgres:postgres@db:5432/template-db?sslmode=disable
+      NODE_ENV: development
+      # Must be at least 32 bytes or the app refuses to start.
+      JWT_SECRET: dev-insecure-jwt-secret-not-for-production
+      FRONTEND_URL: http://localhost:3000
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      MAIL_FROM: no-reply@example.com
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      # Server-side proxy target; the browser never talks to the API directly.
+      API_URL: http://api:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  db-data:

@@ -3,11 +3,8 @@
 # Fast checks only — no e2e here.
 set -e
 
-echo "→ backend: build + clippy"
-(cd backend && cargo build --quiet && cargo clippy --quiet)
-
-echo "→ backend: cargo test (DB integration tests skip without TEST_DATABASE_URL)"
-(cd backend && cargo test --quiet)
+echo "→ backend: build + tests (Gradle; DB integration tests skip without TEST_DATABASE_URL)"
+(cd backend && ./gradlew build --quiet)
 
 echo "→ frontend: typecheck"
 (cd frontend && npx tsc --noEmit)

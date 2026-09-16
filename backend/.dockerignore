@@ -1,0 +1,16 @@
+# Build output and tool caches — recreated inside the image.
+build/
+.gradle/
+bin/
+*.pid
+
+# Version control metadata and IDE files.
+.git/
+.gitignore
+.idea/
+*.iml
+.vscode/
+
+# Don't drag a local .env into the image; compose supplies the environment.
+.env
+.env.*

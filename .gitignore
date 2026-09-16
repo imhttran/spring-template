@@ -3,8 +3,12 @@ node_modules/
 .next/
 tsconfig.tsbuildinfo
 
-# Rust (backend/)
-target/
+# Gradle / Java (backend/)
+build/
+.gradle/
+bin/
+# The Gradle wrapper jar is committed, so it must survive the rules above.
+!backend/gradle/wrapper/gradle-wrapper.jar
 
 # Service pid files (manage.sh)
 *.pid

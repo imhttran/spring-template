@@ -16,6 +16,6 @@
 - **Enumeration-safe endpoints** — generic responses on signup/forgot-password
   so the API can't be used to probe registered emails
 - **Server-side proxy** — the browser only talks to Next.js; `/api/*` is
-  forwarded to the Rust API, so it's never exposed directly
+  forwarded to the Spring Boot API, so it's never exposed directly
 - **Theming** — UT Austin navy/orange, light and dark variants that follow the
   system setting
