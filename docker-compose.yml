@@ -39,7 +39,7 @@ services:
       FRONTEND_URL: http://localhost:3000
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
-      MAIL_FROM: no-reply@example.com
+      MAIL_FROM: tom.tran@email.com
     ports:
       - "8080:8080"
     depends_on:

@@ -51,7 +51,7 @@ public class AppProperties {
             frontendUrl = "http://localhost:3000";
         }
         if (isBlank(mailFrom)) {
-            mailFrom = "no-reply@example.com";
+            mailFrom = "tom.tran@email.com";
         }
         if (smtpPort == null || smtpPort <= 0) {
             smtpPort = 587;

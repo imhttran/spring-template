@@ -25,6 +25,6 @@ app:
   smtp-port: ${SMTP_PORT:587}
   smtp-user: ${SMTP_USER:}
   smtp-pass: ${SMTP_PASS:}
-  mail-from: ${MAIL_FROM:no-reply@example.com}
+  mail-from: ${MAIL_FROM:tom.tran@email.com}
   max-attempts: ${MAX_ATTEMPTS:3}
   email-verification-required: ${EMAIL_VERIFICATION_REQUIRED:true}

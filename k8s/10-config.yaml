@@ -19,7 +19,7 @@ data:
   FRONTEND_URL: http://template.localhost
   SMTP_HOST: mailpit
   SMTP_PORT: "1025"
-  MAIL_FROM: no-reply@example.com
+  MAIL_FROM: tom.tran@email.com
 ---
 apiVersion: v1
 kind: Secret
