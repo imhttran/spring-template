@@ -74,9 +74,8 @@ subcommand equivalent (`./manage.sh help`).
 - **[docs/DATABASE.md](docs/DATABASE.md)** — install Postgres, Flyway schema, reset, tests
 - **`.env.example`** — every config variable
 
-Background, for how the backend got here (Go → Rust → Spring Boot, each one
-replaced rather than run alongside): **[docs/SPRING_MIGRATION.md](docs/SPRING_MIGRATION.md)**
-and **[docs/RUST_MIGRATION.md](docs/RUST_MIGRATION.md)**.
+Background, for how the backend got here (each stack replaced rather than run
+alongside): **[docs/SPRING_MIGRATION.md](docs/SPRING_MIGRATION.md)**.
 
 ## Tests
 

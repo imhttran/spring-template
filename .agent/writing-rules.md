@@ -59,7 +59,7 @@ Do not restate the question before answering it.
 
 ## Style rules
 
-Be extremely concise. Sacrifice grammar for the sake of concision. 
+Be extremely concise. Sacrifice grammar for the sake of concision.
 
 Write in plain English. Avoid jargon. Be direct and don't overexplain. If you can just do the thing, do it.
 

@@ -1,11 +1,11 @@
-# Spring Migration (Rust backend → Spring Boot backend)
+# Spring Migration (legacy backend → Spring Boot backend)
 
-Goal: replace the Rust backend with a Spring Boot one. **Next.js and PostgreSQL
+Goal: replace the legacy backend with a Spring Boot one. **Next.js and PostgreSQL
 are unchanged**, and the API contract (routes, status codes, JSON shapes) is
 frozen — `frontend/next.config.ts`'s proxy and the ported test suite define it.
-The Spring backend took the Rust one's place: same directory (`backend/`), same
-port, same database. The Rust implementation is gone from the tree — git history
-has it, and `docs/RUST_MIGRATION.md` records how it got there.
+The Spring backend took the legacy one's place: same directory (`backend/`), same
+port, same database. The legacy implementation is gone from the tree — git
+history still has it.
 
 ```
 Browser → Next.js (:3000) → Spring API (:8080, Spring MVC + JdbcClient + JWT + scrypt) → PostgreSQL
@@ -125,7 +125,8 @@ Browser → Next.js (:3000) → Spring API (:8080, Spring MVC + JdbcClient + JWT
       Makefile can see failures; `Makefile` where every target delegates to
       exactly one subcommand. _Exit: `make help` lists every target,
       `make -n <target>` shows a 1:1 delegation, an unknown subcommand exits 2._
-      Docker images could **not** be built during this work (see below).
+      Docker images were not buildable during this work (see below); they build
+      now.
 - [x] **Phase 9 — cutover**: the Rust backend deleted and the Spring app moved
       from `backend-spring/` to `backend/`; every path reference updated
       (`.githooks/pre-commit`, `manage.sh`, `.gitignore` — including the dropped
@@ -194,21 +195,15 @@ loads no `.env` files.
 
 ## Not verified in this environment
 
-The Docker path parses (`docker compose config`) and both Dockerfiles were
-reviewed, but the images were never built here: every pull from Docker Hub fails
-with `401 Unauthorized: incorrect username or password`, including
-`docker pull hello-world`. That is a stale credential in the macOS keychain
-(`credsStore: osxkeychain` with an `index.docker.io` entry), not something in
-this repo. Fix with `docker logout` (anonymous pulls) or `docker login`, then
-`make up`.
+The Docker path parses (`docker compose config`) and both Dockerfiles are
+reviewed, and both images build (`docker compose build`). Note that building
+needs working Docker Hub credentials: a stale macOS keychain entry
+(`credsStore: osxkeychain`) makes every pull fail with `401 Unauthorized:
+incorrect username or password`, including `docker pull hello-world`. Fix with
+`docker logout` (anonymous pulls) or `docker login`, then `make up`.
 
-`.env.example` still documents the old DSN
-(`postgres://…/rust_template?sslmode=disable`). It is the one file this change
-could not update. Point it at the new database name:
+`.env.example` documents the current DSN
+(`postgres://…/template-db?sslmode=disable`).
 
-```bash
-sed -i '' 's|/rust_template|/template-db|' .env.example
-```
-
-Any personal `.env` / `.env.dev` needs the same one-line change, and the local
-database has to exist (`createdb "template-db"`).
+Any personal `.env` / `.env.dev` needs the same value, and the local database has
+to exist (`createdb "template-db"`).
