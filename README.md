@@ -33,11 +33,9 @@ the frontend on :3000. Migrations run automatically on the API's first boot.
 ./manage.sh up      # start backend + frontend
 ```
 
-`up` refuses to start if Postgres is down. `DATABASE_URL` must point at
-**`template-db`**; the dev default is
-`postgres://postgres:postgres@localhost:5432/template-db?sslmode=disable`, and
-`./manage.sh` reads `.env` first, then `.env.dev`. If you have an older `.env`
-the database name has changed since — see docs/DATABASE.md.
+`up` refuses to start if Postgres is down, and `DATABASE_URL` must point at
+**`template-db`**. **[docs/DATABASE.md](docs/DATABASE.md)** has the DSN, setting
+up a local instance, and what an older `.env` needs.
 
 **Kubernetes** — the same stack on Rancher Desktop's cluster, needs Kubernetes
 enabled (_Preferences → Kubernetes_) and Docker running:
@@ -67,20 +65,15 @@ owns the steps — so there is one implementation of each:
 | re-seed  | `make db-reseed YES=1`                    | menu [11]                       |
 | role     | `make role EMAIL=you@mail.com ROLE=admin` | menu [8]                        |
 
-On Kubernetes the equivalents are `make k8s-up`, `k8s-rebuild`, `k8s-down`,
-`k8s-status`, `k8s-logs WHAT=api` and `k8s-reset` (menu [12]–[17]).
-
-`make help` lists the targets, `./manage.sh help` lists the subcommands, and
-`./manage.sh` with no argument opens the menu.
+`make help` and `./manage.sh help` list every target and subcommand;
+`./manage.sh` with no argument opens the menu. Kubernetes has its own targets
+(`make k8s-up`, `make k8s-rebuild`, `make k8s-status`, …) — see
+**[docs/KUBERNETES.md](docs/KUBERNETES.md)**.
 
 Dev admin: **admin@mail.com** / **Password1234!** — the first login from a new
 browser asks for a 2FA code; in development it's always `1234`, and the browser
 is trusted afterwards. Without SMTP configured the mailer logs emails instead of
 sending them; under compose, Mailpit collects them at http://localhost:8025.
-
-Useful menu options beyond setup/start: [5] status, [6] tests, [9] reset DB,
-[10] tail logs, [11] re-seed (drop DB + restart backend). Every one of them has a
-subcommand equivalent (`./manage.sh help`).
 
 ## Docs
 
@@ -97,11 +90,11 @@ alongside): **[docs/SPRING_MIGRATION.md](docs/SPRING_MIGRATION.md)**.
 `make test` (or `./manage.sh test`, or menu [6]) runs the backend tests
 (`./gradlew test`) plus the frontend build. 39 tests total; the 12 DB-backed
 integration tests need `TEST_DATABASE_URL` and skip without it, leaving the 27
-unit tests. See docs/DATABASE.md for the test database.
+unit tests. See **[docs/DATABASE.md](docs/DATABASE.md)** for the test database.
 
 ## Roles
 
-`client` < `staff` < `admin`. Grant via CLI only (no self-service promotion):
+`client` < `staff` < `admin`. Grant via CLI only:
 
 ```bash
 make role EMAIL=you@email.com ROLE=admin

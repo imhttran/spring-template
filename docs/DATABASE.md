@@ -4,8 +4,8 @@ Everything this project does with PostgreSQL, in one page.
 
 ## Connection
 
-One variable: `DATABASE_URL` (`.env.dev` already provides the dev default; a
-personal root `.env` overrides it).
+One variable: `DATABASE_URL`. Development has a working default built in, and a
+personal root `.env` or `.env.dev` overrides it.
 
 ```
 postgres://postgres:postgres@localhost:5432/template-db?sslmode=disable
@@ -81,9 +81,9 @@ Tables:
 The `email_queue` column is named `"to"`, which is a reserved word, so queries
 have to quote it.
 
-Dev seed (`DevAdminSeeder`, only when `NODE_ENV=development`): upserts
-`admin@mail.com` / `Password1234!` plus their profile, so the dev admin isn't
-blocked by onboarding gates.
+Dev seed (`DevAdminSeeder`, only when `NODE_ENV=development`): upserts the dev
+admin (README has the credentials) plus their profile, so it isn't blocked by
+onboarding gates.
 
 ## Day-to-day operations
 
@@ -104,7 +104,7 @@ above.
 ## Tests
 
 The DB-backed integration tests need a reachable Postgres and are skipped
-otherwise (the 27 unit tests still run):
+otherwise:
 
 ```bash
 createdb "template-db-test"        # once
@@ -124,4 +124,4 @@ Any managed PostgreSQL (RDS, Cloud SQL, Neon, a Docker container) works: set
 `DATABASE_URL` in the environment (`NODE_ENV=production` loads no `.env.dev`,
 and only the backend's server environment matters — the frontend never touches
 Postgres). Migrations apply on first boot against an empty database. Set a real
-`JWT_SECRET` of at least 32 bytes.
+`JWT_SECRET` (`.env.example` has the minimum length).

@@ -1,21 +1,13 @@
 # Kubernetes (Rancher Desktop)
 
-The same four services as `docker-compose.yml` — Postgres, Mailpit, the Spring
-API and Next.js — expressed as plain manifests in `k8s/`. There is no Helm chart
-and no kustomize overlay: `kubectl apply -f k8s/` is the whole deploy.
+Compose is the primary path; this runs the _same_ four services — Postgres,
+Mailpit, the Spring API and Next.js — on Rancher Desktop's cluster, so nothing is
+duplicated: the same images built from `backend/Dockerfile` and
+`frontend/Dockerfile`, no Helm chart, no kustomize overlay.
+`kubectl apply -f k8s/` is the whole deploy.
 
-```
-Browser → Ingress (Traefik, :80) → frontend Service → Next.js → api Service → PostgreSQL
-                                          │                     │
-                                          └── /api/* proxied ───┘        Mailpit
-```
-
-## Why
-
-Compose is still the primary path; this exists so the same images can run on a
-real cluster without a second set of Dockerfiles or a second build system. Both
-paths consume the images built from `backend/Dockerfile` and
-`frontend/Dockerfile`.
+Same shape as the compose stack — only the front door differs: Traefik replaces
+the host port mappings, and cluster DNS replaces compose's service names.
 
 ## Prerequisites
 
@@ -112,8 +104,8 @@ equivalent of compose's `depends_on: condition: service_healthy`.
 - **ConfigMap** `template-config` — `NODE_ENV`, `DATABASE_URL`, `FRONTEND_URL`,
   `SMTP_HOST`, `SMTP_PORT`, `MAIL_FROM`. Service names (`postgres`, `mailpit`)
   resolve as cluster DNS, the counterpart of compose's service-name resolution.
-- **Secret** `template-secrets` — `JWT_SECRET`. The API refuses to start unless it
-  is at least 32 bytes; the committed value is the same dev-only one compose uses.
+- **Secret** `template-secrets` — `JWT_SECRET`, set to the same dev-only value
+  compose uses. The API refuses a short one; see `.env.example`.
 
 `FRONTEND_URL` is `http://template.localhost`, so verification and password-reset
 links in outgoing email point at the address the browser actually uses.
@@ -133,8 +125,8 @@ curl -s -H 'Content-Type: application/json' \
   http://template.localhost/api/login
 ```
 
-The dev admin is `admin@mail.com` / `Password1234!`, seeded on startup because
-`NODE_ENV=development`. The dev 2FA code is always `1234`.
+The credentials in it are the dev admin from the README, seeded on startup
+because `NODE_ENV=development`.
 
 ## Probes
 
