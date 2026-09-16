@@ -1,0 +1,63 @@
+# Mailpit stands in for a real SMTP server, same as in compose: the API sends
+# here and the web UI at :8025 is where you read the mail.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/name: mailpit
+    app.kubernetes.io/part-of: spring-template
+spec:
+  selector:
+    app.kubernetes.io/name: mailpit
+  ports:
+    - name: smtp
+      port: 1025
+      targetPort: smtp
+    - name: http
+      port: 8025
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/name: mailpit
+    app.kubernetes.io/part-of: spring-template
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mailpit
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mailpit
+    spec:
+      containers:
+        - name: mailpit
+          image: axllent/mailpit:latest
+          ports:
+            - name: smtp
+              containerPort: 1025
+            - name: http
+              containerPort: 8025
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            tcpSocket:
+              port: smtp
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi

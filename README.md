@@ -39,6 +39,17 @@ the frontend on :3000. Migrations run automatically on the API's first boot.
 `./manage.sh` reads `.env` first, then `.env.dev`. If you have an older `.env`
 the database name has changed since — see docs/DATABASE.md.
 
+**Kubernetes** — the same stack on Rancher Desktop's cluster, needs Kubernetes
+enabled (_Preferences → Kubernetes_) and Docker running:
+
+```bash
+make k8s-up         # or: ./manage.sh k8s:up
+open http://template.localhost
+```
+
+`k8s/` holds plain manifests for the same four services; see
+**[docs/KUBERNETES.md](docs/KUBERNETES.md)**.
+
 ### Entry points
 
 `make` and the interactive menu are both thin wrappers over `./manage.sh`, which
@@ -56,6 +67,9 @@ owns the steps — so there is one implementation of each:
 | re-seed  | `make db-reseed YES=1`                    | menu [11]                       |
 | role     | `make role EMAIL=you@mail.com ROLE=admin` | menu [8]                        |
 
+On Kubernetes the equivalents are `make k8s-up`, `k8s-rebuild`, `k8s-down`,
+`k8s-status`, `k8s-logs WHAT=api` and `k8s-reset` (menu [12]–[17]).
+
 `make help` lists the targets, `./manage.sh help` lists the subcommands, and
 `./manage.sh` with no argument opens the menu.
 
@@ -72,6 +86,7 @@ subcommand equivalent (`./manage.sh help`).
 
 - **[docs/FEATURE.md](docs/FEATURE.md)** — what this build does
 - **[docs/DATABASE.md](docs/DATABASE.md)** — install Postgres, Flyway schema, reset, tests
+- **[docs/KUBERNETES.md](docs/KUBERNETES.md)** — the Rancher Desktop cluster: images, ingress, commands
 - **`.env.example`** — every config variable
 
 Background, for how the backend got here (each stack replaced rather than run

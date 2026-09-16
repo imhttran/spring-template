@@ -1,0 +1,36 @@
+# Rancher Desktop bundles Traefik, and macOS resolves any *.localhost name to
+# 127.0.0.1, so these hosts work from the browser with no /etc/hosts edit.
+#
+# template.localhost is the app. The second host exposes the API directly, which
+# is only useful for poking endpoints with curl — the UI reaches the API through
+# its own server-side proxy.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: template
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/part-of: spring-template
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: template.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+    - host: api.template.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8080

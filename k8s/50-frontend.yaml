@@ -1,0 +1,75 @@
+# Next.js. As in compose, this is the only browser-facing app: /api/* is
+# proxied server-side to the API, so the browser never talks to the API directly
+# and there is no CORS anywhere.
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: spring-template
+spec:
+  selector:
+    app.kubernetes.io/name: frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: spring-template
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend
+    spec:
+      containers:
+        - name: frontend
+          # Built by `docker compose build` (frontend/Dockerfile); see 40-api.yaml
+          # for why this runs straight out of Docker's image store.
+          image: spring-template-frontend:latest
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            # Server-side proxy target. The Service name, not compose's `api`
+            # host mapping — inside the cluster this is plain DNS.
+            - name: API_URL
+              value: http://api:8080
+          # `next dev` compiles a route on first request, so this can take a
+          # while; the startup probe is what absorbs that, and the pod is not
+          # restarted while it runs.
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          # No liveness probe on purpose: a dev server under a cold compile can
+          # stall long enough to trip one, and restarting it would only restart
+          # the compile. Readiness already takes it out of the Service meanwhile.
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 1Gi

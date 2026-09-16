@@ -1,0 +1,8 @@
+# Everything for this project lives in one namespace, so `kubectl delete
+# namespace spring-template` is the whole teardown.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spring-template
+  labels:
+    app.kubernetes.io/part-of: spring-template

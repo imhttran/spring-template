@@ -1,0 +1,94 @@
+# PostgreSQL. A StatefulSet (not a Deployment) because it owns a PVC through
+# volumeClaimTemplates, so the data survives pod restarts.
+#
+# Unlike compose, there is no host port here: the database is only reachable
+# inside the cluster. Use `./manage.sh k8s:psql` for a shell.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: spring-template
+spec:
+  # Headless: a StatefulSet's stable network identity, which is what lets
+  # `postgres` resolve to the single pod.
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: spring-template
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            # Dev credentials, same as compose. The database name has a hyphen,
+            # so anything referring to it in SQL has to quote it.
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: POSTGRES_DB
+              value: template-db
+            # Keep the cluster inside a subdirectory of the mount point: the
+            # volume root may hold other entries, and initdb refuses a non-empty
+            # data directory.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          # The API's init container blocks on exactly this check, so it is what
+          # gates the whole stack coming up in order.
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-d", "template-db"]
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: postgres
+            periodSeconds: 15
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        # No storageClassName: k3s ships a default local-path provisioner.
+        resources:
+          requests:
+            storage: 1Gi

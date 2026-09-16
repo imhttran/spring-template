@@ -1,0 +1,98 @@
+# The Spring Boot API.
+#
+# Flyway runs on startup, so the migrations apply when this pod comes up — there
+# is no separate migration Job. The init container is compose's
+# `depends_on: db: condition: service_healthy` in Kubernetes form: it blocks
+# until Postgres accepts connections, so the API doesn't crash-loop waiting for
+# its database.
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: spring-template
+spec:
+  selector:
+    app.kubernetes.io/name: api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: spring-template
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - until pg_isready -h postgres -U postgres -d template-db; do
+              echo "waiting for postgres"; sleep 2; done
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
+      containers:
+        - name: api
+          # Built by `docker compose build`, which is also where the cluster
+          # looks: Rancher Desktop's k3s runs on Docker's daemon, so a local
+          # image needs no push or load. Never, because this image exists in no
+          # registry — a node without it fails loudly rather than pulling a
+          # stale one from somewhere else.
+          image: spring-template-api:latest
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: template-config
+            - secretRef:
+                name: template-secrets
+          # The API exposes no health endpoint, and the contract is frozen, so
+          # probes stay at the transport level. A listening port is a strong
+          # signal here: Tomcat only opens it after the context refreshes, which
+          # is after Flyway has applied every migration.
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 4
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 1Gi

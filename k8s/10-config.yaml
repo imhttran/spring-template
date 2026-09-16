@@ -1,0 +1,36 @@
+# The API's environment, split the same way docker-compose.yml splits it:
+# everything non-secret in a ConfigMap, the JWT signing key in a Secret.
+#
+# Service names below (`postgres`, `mailpit`) are the ClusterIP Services in this
+# namespace, so they resolve from any pod here exactly like compose's service
+# names resolve on the compose network.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: template-config
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/part-of: spring-template
+data:
+  NODE_ENV: development
+  DATABASE_URL: postgres://postgres:postgres@postgres:5432/template-db?sslmode=disable
+  # Browser-facing URL of the UI, used for links in outgoing email (verify,
+  # reset). The ingress host is the address the browser actually uses.
+  FRONTEND_URL: http://template.localhost
+  SMTP_HOST: mailpit
+  SMTP_PORT: "1025"
+  MAIL_FROM: no-reply@example.com
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: template-secrets
+  namespace: spring-template
+  labels:
+    app.kubernetes.io/part-of: spring-template
+type: Opaque
+stringData:
+  # The API refuses to start unless this is at least 32 bytes. This is the same
+  # dev-only value docker-compose.yml uses — fine for a local cluster, never for
+  # anything reachable. Replace it with a real secret before deploying anywhere.
+  JWT_SECRET: dev-insecure-jwt-secret-not-for-production
